@@ -1,0 +1,102 @@
+version: '3'
+
+
+services:
+  native:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: NATIVE
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+
+  json:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: JSON
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+
+  xml:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: XML
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+
+  avro:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: AVRO
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+  
+  proto:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: PROTO
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+
+  yaml:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: YAML
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+  
+  msgpack:
+    image: dofe71/coa_hm1
+    expose:
+      - "5477/udp"
+    environment:
+      TYPE: MSGPACK
+      PORT: 5477
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python worker.py
+
+  proxy:
+    image: dofe71/coa_hm1
+    expose:
+      - "5777/udp"
+    ports:
+      - "5777:5777/udp"
+    environment:
+      WORKERS_PORT: 5477
+      PORT: 5777
+      MULTICAST_ADDR: "224.0.0.1"
+      MULTICAST_PORT: 9999
+    command: python proxy.py
+    depends_on:
+      - native
+      - json
+      - xml
+      - avro
+      - yaml
+      - msgpack
+      - proto
+  

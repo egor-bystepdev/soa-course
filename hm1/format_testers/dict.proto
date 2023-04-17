@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message MyData {
+  int32 number = 1;
+  float float = 2;
+  bool bool = 3;
+  string ask = 4;
+  repeated string array_str = 5;
+  map<string, int32> dict = 6;
+}

@@ -1,0 +1,6 @@
+xmltodict
+dicttoxml
+PyYAML
+avro
+msgpack
+protobuf
