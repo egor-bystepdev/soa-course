@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 
 class UDPServerProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport):
@@ -24,7 +25,10 @@ async def main():
     import random
     while True:
         m = random.choice(mt)
-        await protocol.send_message(json.dumps({"type" : "get_result_all"}), "0.0.0.0", 5777)
+        if (random.randint(0, 1) == 1):
+            await protocol.send_message(json.dumps({"type" : "get_result_all"}), "0.0.0.0", 5777)
+        else:
+            await protocol.send_message(json.dumps({"type" : "get_result", "methods" : [m]}), "0.0.0.0", 5777)
         await asyncio.sleep(1)
 
 asyncio.run(main())
