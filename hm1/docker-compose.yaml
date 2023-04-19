@@ -82,12 +82,12 @@ services:
   proxy:
     image: dofe71/coa_hm1
     expose:
-      - "5777/udp"
+      - "2000/udp"
     ports:
-      - "5777:5777/udp"
+      - "2000:2000/udp"
     environment:
       WORKERS_PORT: 5477
-      PORT: 5777
+      PORT: 2000
       MULTICAST_ADDR: "224.0.0.1"
       MULTICAST_PORT: 9999
     command: python proxy.py
