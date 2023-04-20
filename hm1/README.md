@@ -15,16 +15,16 @@
 
 Запрос всех методов
 ``
-{"type" : get_result_all}
+{"type" : "get_result_all"}
 ``
 
 Запрос конкретного набора из списка ["NATIVE", "JSON", "XML", "AVRO", "PROTO", "MSGPACK", "YAML"] (не чувствительно к регистру)
 
 ``
-{"type" : get_result, "methods" : ["JSON", "XML"]}
+{"type" : "get_result", "methods" : ["JSON", "XML"]}
 ``
 
-Адрес прокси сервера 0.0.0.0:5777
+Адрес прокси сервера 0.0.0.0:2000
 Для удобства можно использовать 
 ``
 spammer.py

@@ -42,7 +42,7 @@ class UdpProtocol(asyncio.DatagramProtocol):
                     continue
                 method = method.upper()
                 if (method not in available_methods.avaliable_methods):
-                    return
+                    continue
                 logging.info("Send to %d", self.worker_port)
                 data_to_send = serialize_json({"type" : "get_result", "addr" : addr[0] + ":" + str(addr[1])})
                 send_message.send_message(self.transport, data_to_send, method, self.worker_port) # change
@@ -65,10 +65,11 @@ class UdpProtocol(asyncio.DatagramProtocol):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     PORT = int(get_env_var('PORT'))
+    WORKERS_PORT = int(get_env_var('WORKERS_PORT'))
     MULTICAST_ADDR = get_env_var('MULTICAST_ADDR')
     MULTICAST_PORT = int(get_env_var('MULTICAST_PORT'))
     logging.info('port %d', PORT)
-    t = loop.create_datagram_endpoint(lambda: UdpProtocol(PORT, MULTICAST_ADDR, MULTICAST_PORT), local_addr=('0.0.0.0', PORT))
+    t = loop.create_datagram_endpoint(lambda: UdpProtocol(WORKERS_PORT, MULTICAST_ADDR, MULTICAST_PORT), local_addr=('0.0.0.0', PORT))
     loop.run_until_complete(t)
     loop.run_forever()
 
