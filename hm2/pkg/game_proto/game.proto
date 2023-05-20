@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package game;
+option go_package="proto/game";
+
+service Game {
+    rpc Join (stream GameRequest) returns (stream GameResponse) {}
+}
+
+message GameConnect {
+    int32 session_id = 1;
+    string username = 2;
+}
+
+message KillSomeone {
+    string username = 1;
+}
+
+message EndDay {}
+
+message GameRole {
+    string role = 1;
+}
+
+message GameStatus {
+    int32 day_num = 1;
+    string time = 2;
+    repeated string usernames = 3;
+    repeated bool alive = 4;
+    repeated string messages = 5;
+}
+
+message Investigate {
+    string username = 1;
+}
+
+message InvestigateResult {
+    bool mafia = 1;
+}
+
+message InvestigatePublish {
+    bool answer = 1;
+}
+
+message Result {
+    string result = 1;
+}
+
+message GameRequest {
+    oneof game_message {
+        GameConnect game_connect = 1;
+        KillSomeone kill_someone = 2;
+        EndDay end_day = 3;
+        Investigate investigate = 4;
+        InvestigatePublish investigate_publish = 5;
+    }
+}
+
+message GameResponse {
+    oneof game_message {
+        GameRole game_role = 1;
+        GameStatus game_status = 2;
+        Result result = 3;
+        InvestigateResult investigate_result = 4;
+    }
+}

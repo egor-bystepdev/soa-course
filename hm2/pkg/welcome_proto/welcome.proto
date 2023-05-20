@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package welcome;
+option go_package="proto/welcome";
+
+service Welcome {
+    rpc Connect (ConnectRequest) returns (stream WelcomeResponse) {}
+}
+
+message ConnectRequest {
+    string username = 1;
+}
+
+enum MessageType {
+    WaitList = 0;
+    SessionConnectAddr = 1;
+    InvalidName = 2;
+    RepeatedName = 3;
+}
+
+message WelcomeResponse {
+    MessageType message_type = 1;
+    string result_string = 2;
+}
