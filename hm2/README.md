@@ -1,13 +1,21 @@
 # Mafia
 
-Сборка:
+### Запуск докера
+
+```
+docker-compose up --scale client=4
+```
+Если захочется больше клиентов в одной игре, то нужно в docker-compose поменять MAFIA_PLAYERS_COUNT.
+
+
+### Сборка:
 ```
 mkdir -p bin && go build -o bin/client client/main.go && go build -o bin/server server/main.go
 cd pkg && protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
 ```
 
-Возможно нужно будет поставить protoc, и протобуфы для go, тут есть туториал https://grpc.io/docs/languages/go/quickstart/
+Возможно нужно будет поставить protoc, и протобуфы для go, тут есть туториал https://grpc.io/docs/languages/go/quickstart/ (go mod download && go mod verify можно позвать)
 
 Запуск
 ```
@@ -22,5 +30,5 @@ cd pkg && protoc --go_out=. --go_opt=paths=source_relative \
 -p отвечает за ручной ввод адреса и порта сервера, -h за ручной формат игры (выбираете кого убить и проверить). Эти параметры опциональны.
 
 По дефолту подключается к 0.0.0.0:50051, но можно установить переменные окружения MAFIA_SERVER_HOST и MAFIA_SERVER_PORT.
- 
+
 

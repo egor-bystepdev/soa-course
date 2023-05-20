@@ -112,7 +112,7 @@ func connectAndPlay(host_port_from_stdin, manual_game bool) error {
 			}
 			fmt.Printf("Port `%v`, session_id `%v`\n", port, id)
 			stream.CloseSend()
-			err = game_client.Start(id, port, username, manual_game)
+			err = game_client.Start(id, envHost, port, username, manual_game)
 			if err != nil {
 				return err
 			}

@@ -13,10 +13,10 @@ import (
 	gamer "hm2/mafia_engine"
 )
 
-func Start(session_id, port int, username string, manual_game bool) error {
+func Start(session_id int, host string, port int, username string, manual_game bool) error {
 
 	log.Println("Hello!!!!")
-	conn, err := grpc.Dial(fmt.Sprintf(":%d", port), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf("%v:%d", host, port), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}

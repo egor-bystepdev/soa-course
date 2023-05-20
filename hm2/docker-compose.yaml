@@ -1,0 +1,24 @@
+version: '3'
+
+
+services:
+  server:
+    image: dofe71/mafia_server
+    expose:
+      - "50051"
+    environment:
+      MAFIA_SERVER_PORT: 50051
+      MAFIA_PLAYERS_COUNT: 4
+  
+  client:
+    image: dofe71/mafia_client
+    expose:
+      - "50051"
+    environment:
+      MAFIA_SERVER_HOST: "server"
+      MAFIA_SERVER_PORT: 50051
+    depends_on:
+      - server
+
+
+  
