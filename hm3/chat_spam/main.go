@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	chat "hm3/chat"
+	"os"
 	"time"
 
 	"math/rand"
@@ -22,8 +23,11 @@ func RandomString(length int) string {
 }
 
 func main() {
+	time.Sleep(time.Second * 20)
 	url := "amqp://guest:guest@localhost:5672/"
-	chat.CreateFanoutExchange(url, "test")
+	if len(os.Getenv("RABBITMQ_HOST")) != 0 {
+		url = fmt.Sprintf("amqp://guest:guest@%v:5672/", os.Getenv("RABBITMQ_HOST"))
+	}
 	writer := chat.StdoutWriter{Mutex: sync.Mutex{}}
 	username := RandomString(10)
 	fmt.Printf("You %v\n", username)
