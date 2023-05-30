@@ -1,4 +1,4 @@
-module hm3
+module github.com/egor-bystepdev/soa-course/tree/master/hm3
 
 go 1.20
 
