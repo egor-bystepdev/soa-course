@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	chat "github.com/egor-bystepdev/soa-course/tree/master/hm3/chat"
+	chat "github.com/egor-bystepdev/soa-course/hm3/chat"
 	"os"
 	"time"
 

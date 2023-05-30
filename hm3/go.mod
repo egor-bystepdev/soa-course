@@ -1,4 +1,4 @@
-module github.com/egor-bystepdev/soa-course/tree/master/hm3
+module github.com/egor-bystepdev/soa-course/hm3/chat
 
 go 1.20
 
