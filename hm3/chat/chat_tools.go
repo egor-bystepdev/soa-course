@@ -8,6 +8,25 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+func DeleteQueue(url, name string) error {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+
+	if err = ch.ExchangeDelete(name, false, false); err != nil {
+		return err
+	}
+	return nil
+}
+
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
