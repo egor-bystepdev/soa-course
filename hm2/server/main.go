@@ -201,6 +201,7 @@ func main() {
 	if len(envPort) == 0 {
 		envPort = "50051"
 	}
+
 	fmt.Printf("Start server with %v players, port %v\n", kGameUsersLimit, envPort)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", envPort))
 	if err != nil {
@@ -208,7 +209,12 @@ func main() {
 		return
 	}
 	s := grpc.NewServer()
-	welcome.RegisterWelcomeServer(s, &server{users: make(map[string]int), sessions: make(map[string]int), session_to_port: make(map[int]int), started_sessions: make(map[int]bool), session_ports: 5000, current_session_id: 0})
+	welcome.RegisterWelcomeServer(s, &server{users: make(map[string]int),
+			sessions: make(map[string]int),
+			session_to_port: make(map[int]int),
+			started_sessions: make(map[int]bool), 
+			session_ports: 5000,
+			current_session_id: 0})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

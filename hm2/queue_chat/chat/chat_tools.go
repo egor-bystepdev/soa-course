@@ -1,0 +1,147 @@
+package chat
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	amqp "github.com/rabbitmq/amqp091-go"
+)
+
+func DeleteQueue(url, name string) error {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+
+	if err = ch.ExchangeDelete(name, false, false); err != nil {
+		return err
+	}
+	return nil
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Printf("%s: %s", msg, err)
+	}
+}
+
+func Publish(url, name, username string, msgs <-chan string) {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		failOnError(err, "Failed to connect to RabbitMQ")
+		return
+	}
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		failOnError(err, "Failed to open a channel")
+		return
+	}
+	defer ch.Close()
+
+	err = ch.ExchangeDeclare(
+		name, // name
+		"fanout", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		failOnError(err, "Failed to declare exchange")
+		return
+	}
+
+	for msg := range msgs {
+		ctx := context.Background()
+
+		err := ch.PublishWithContext(ctx, name, "", false, false, amqp.Publishing {
+			ContentType: "text/plain",
+			Body:        []byte(fmt.Sprintf("[%v] %v", username, msg)),
+		})
+		if err != nil {
+			failOnError(err, "Failed to publish message")
+			return
+		}
+	}
+}
+
+func Consume(url, exchange_name, username string, s *StdoutWriter) {
+	conn, err := amqp.Dial(url)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	if err != nil {
+		return
+	}
+	defer ch.Close()
+
+	err = ch.ExchangeDeclare(
+		exchange_name, // name
+		"fanout", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		failOnError(err, "Failed to declare exchange")
+		return
+	}
+	q, err := ch.QueueDeclare(
+		"", // name
+		false,   // durable
+		false,   // delete when unused
+		true,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+
+	if err != nil {
+		failOnError(err, "Failed to declare queue")
+		return
+	}
+	err = ch.QueueBind(q.Name, "", exchange_name, false, nil)
+	if err != nil {
+		failOnError(err, "Failed to bind queue")
+		return
+	}
+
+	msgs, err := ch.Consume(
+		q.Name, // queue
+		username,     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+
+	if err != nil {
+		failOnError(err, "Failed to bind queue")
+		return
+	}
+
+	for msg := range msgs {
+		s.PrintUserMessage(string(msg.Body))
+	}
+	log.Println("End of publish.")
+}

@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"sync"
 
 	"google.golang.org/grpc"
 
 	game "hm2/pkg/game_proto"
 
 	gamer "hm2/mafia_engine"
+
+	chat "hm2/queue_chat/chat"
 )
 
-func Start(session_id int, host string, port int, username string, manual_game bool) error {
-
-	log.Println("Hello!!!!")
+func Start(session_id int, host string, port int, username string, manual_game bool, rabbitmq_url string) error {
 	conn, err := grpc.Dial(fmt.Sprintf("%v:%d", host, port), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -51,9 +52,21 @@ func Start(session_id int, host string, port int, username string, manual_game b
 	}
 
 	log.Printf("Role %v.\n", role)
-	g := gamer.CitizenGameState{Username: username, Role: role, Handgame: manual_game}
+	stdout_writer := chat.StdoutWriter{Mutex: sync.Mutex{}}
+	go chat.Consume(rabbitmq_url, fmt.Sprintf("day_%v", session_id), username, &stdout_writer)
+	day_ch := make(chan string)
+	night_ch := make(chan string)
+	go chat.Publish(rabbitmq_url, fmt.Sprintf("day_%v", session_id), username, day_ch)
+	if (role == "mafia") {
+		go chat.Consume(rabbitmq_url, fmt.Sprintf("night_%v", session_id), username, &stdout_writer)
+		go chat.Publish(rabbitmq_url, fmt.Sprintf("night_%v", session_id), username, night_ch)
+	}
+	g := gamer.CitizenGameState{Username: username, Role: role, Handgame: manual_game, Day_chat: day_ch, Night_chat: night_ch, Stdout_writer: &stdout_writer}
+	time.Sleep(time.Second)
 	err = g.Start(stream)
-	if err != err {
+	chat.DeleteQueue(rabbitmq_url, fmt.Sprintf("night_%v", session_id))
+	chat.DeleteQueue(rabbitmq_url, fmt.Sprintf("day_%v", session_id))
+	if err != nil {
 		fmt.Printf("Error occured %v.", err)
 	}
 	return nil

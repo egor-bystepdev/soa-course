@@ -65,6 +65,10 @@ func connectAndPlay(host_port_from_stdin, manual_game bool) error {
 		scanner.Scan()
 		envPort = scanner.Text()
 	}
+	rabbitmq_url := "amqp://guest:guest@localhost:5672/"
+	if len(os.Getenv("RABBITMQ_HOST")) != 0 {
+		rabbitmq_url = fmt.Sprintf("amqp://guest:guest@%v:5672/", os.Getenv("RABBITMQ_HOST"))
+	}
 	fmt.Printf("Connect to %v:%v\n", envHost, envPort)
 	conn, err := grpc.Dial(fmt.Sprintf("%v:%v", envHost, envPort), grpc.WithInsecure())
 	if err != nil {
@@ -112,7 +116,7 @@ func connectAndPlay(host_port_from_stdin, manual_game bool) error {
 			}
 			fmt.Printf("Port `%v`, session_id `%v`\n", port, id)
 			stream.CloseSend()
-			err = game_client.Start(id, envHost, port, username, manual_game)
+			err = game_client.Start(id, envHost, port, username, manual_game, rabbitmq_url)
 			if err != nil {
 				return err
 			}

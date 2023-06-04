@@ -1,11 +1,21 @@
 # Mafia
 
+## Билд докера (но образ есть и в докерхабе)
+
+```
+docker build -t dofe71/mafia_client -f client/Dockerfile .
+
+docker build -t dofe71/mafia_server -f server/Dockerfile .
+```
+
 ### Запуск докера
 
 ```
 docker-compose up --scale client=4
 ```
 Если захочется больше клиентов в одной игре, то нужно в docker-compose поменять MAFIA_PLAYERS_COUNT.
+
+rabbitmq стартует долго, поэтому чат можно будет увидеть через секунд 30.
 
 
 ### Сборка:

@@ -5,10 +5,15 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	chat "hm2/queue_chat/chat"
 )
 
 
-func ReadCommand(welcome_message, command string, allowed_answers map[string]bool) string {
+func ReadCommand(welcome_message,
+	command string,
+	allowed_answers map[string]bool,
+	other_commands map[string]func(string),
+	stdout_writer *chat.StdoutWriter) string {
 	red := "\033[31m"
 	green := "\033[32m"
     reset := "\033[0m"
@@ -17,9 +22,16 @@ func ReadCommand(welcome_message, command string, allowed_answers map[string]boo
 	for v := range allowed_answers {
 		answ = append(answ, v)
 	}
-    fmt.Println(green, welcome_message, reset)
-	fmt.Println(purpure, "Available commands: ", command, reset)
-	fmt.Println(purpure, "Allowed answers: ", answ, reset)
+	enter_msg := ""
+    enter_msg += fmt.Sprintln(green, welcome_message, reset)
+	enter_msg += fmt.Sprintln(purpure, "Available commands: ", command, reset)
+	enter_msg += fmt.Sprintln(purpure, "Allowed answers: ", answ, reset)
+	enter_msg += purpure + " Also you can enter this commands: "
+	for key := range other_commands {
+		enter_msg += fmt.Sprint("{", key, "} ")
+	}
+	enter_msg += reset + "\n"
+	stdout_writer.Print(enter_msg)
 
 	for {
 		scanner := bufio.NewScanner(os.Stdin)
@@ -28,17 +40,22 @@ func ReadCommand(welcome_message, command string, allowed_answers map[string]boo
 		fields := strings.SplitN(input, " ", 2)
 		if len(fields) == 2 {
 			if (fields[0] != command) {
-				fmt.Println(red, fmt.Sprintf("Invalid command `%v`", fields[0]), reset)
+				fn, ok := other_commands[fields[0]]
+				if !ok {
+					stdout_writer.Print(fmt.Sprintln(red, fmt.Sprintf("Invalid command `%v`", fields[0]), reset))
+					continue
+				}
+				fn(fields[1])
 				continue
 			}
 			_, ok := allowed_answers[fields[1]]
 			if (ok) {
 				return fields[1]
 			} else {
-				fmt.Println(red, fmt.Sprintf("Argument `%v` not in allowed answers", fields[1]), reset)
+				stdout_writer.Print(fmt.Sprintln(red, fmt.Sprintf("Argument `%v` not in allowed answers", fields[1]), reset))
 			}
 		} else {
-			fmt.Println(red, "Invalid input", reset)
+			stdout_writer.Print(fmt.Sprintln(red, "Invalid input", reset))
 			continue
 		}
 	}
