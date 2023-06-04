@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	chat "github.com/egor-bystepdev/soa-course/hm3/chat"
+	chat "hm3/chat"
 	"os"
 	"time"
 
@@ -23,7 +23,7 @@ func RandomString(length int) string {
 }
 
 func main() {
-	time.Sleep(time.Second * 20)
+	time.Sleep(time.Second * 30)
 	url := "amqp://guest:guest@localhost:5672/"
 	if len(os.Getenv("RABBITMQ_HOST")) != 0 {
 		url = fmt.Sprintf("amqp://guest:guest@%v:5672/", os.Getenv("RABBITMQ_HOST"))
