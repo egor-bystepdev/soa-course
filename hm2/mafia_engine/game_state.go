@@ -1,31 +1,52 @@
 package mafia_states
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	graph "hm2/sessions_stat_client"
 	"math"
 	"sync"
+	"time"
+
+	"github.com/Khan/genqlient/graphql"
 )
 
-type playersState struct {
-	players_alive map[string]bool
-	players_roles map[string]string
-	joined_users  map[string]bool
-	connected     map[string]bool
-	wait_list     map[string]bool
-	cv            sync.Cond
-	cv_wait_cnt   int
-	cv_cnt        int
-	votes         []string
-	messages      []string
+func GetSHA256OfCurrentTime() string {
+	currentTime := time.Now().String()
+	hasher := sha256.New()
+	hasher.Write([]byte(currentTime))
+	hash := hasher.Sum(nil)
+	hashString := hex.EncodeToString(hash)
+
+	return hashString
 }
 
-func newPlayersState(users []string) *playersState {
+type playersState struct {
+	players_alive  map[string]bool
+	players_roles  map[string]string
+	joined_users   map[string]bool
+	connected      map[string]bool
+	wait_list      map[string]bool
+	cv             sync.Cond
+	cv_wait_cnt    int
+	cv_cnt         int
+	votes          []string
+	messages       []string
+	client_graphql *graphql.Client
+	curr_game_id   string
+}
+
+func newPlayersState(users []string, client *graphql.Client) *playersState {
 	result := &playersState{players_alive: make(map[string]bool),
-		players_roles: make(map[string]string),
-		joined_users:  make(map[string]bool),
-		votes:         make([]string, 0),
-		connected:     make(map[string]bool),
-		wait_list:     make(map[string]bool)}
+		players_roles:  make(map[string]string),
+		joined_users:   make(map[string]bool),
+		votes:          make([]string, 0),
+		connected:      make(map[string]bool),
+		wait_list:      make(map[string]bool),
+		client_graphql: client,
+		curr_game_id:   GetSHA256OfCurrentTime()}
 	result.cv = *sync.NewCond(&sync.Mutex{})
 	result.cv_cnt = len(users)
 	result.cv_wait_cnt = 0
@@ -38,10 +59,18 @@ func newPlayersState(users []string) *playersState {
 	for len(roles) < len(users) {
 		roles = append(roles, "man")
 	}
+	players_gh := make([]graph.PlayerData, 0)
 	for i, value := range users {
+		players_gh = append(players_gh, graph.PlayerData{Username: value, Role: roles[i]})
 		result.players_alive[value] = true
 		result.players_roles[value] = roles[i]
 		result.wait_list[value] = true
+	}
+
+	ctx := context.Background()
+	_, err := graph.CreateGame(ctx, *client, graph.GameInfo{Id: result.curr_game_id, State: graph.GameStateInProgress}, players_gh)
+	if err != nil {
+		fmt.Printf("Graphql error %v\n", err)
 	}
 	return result
 }
@@ -197,6 +226,22 @@ func (p *playersState) waitGamers(username string) error {
 			p.wait_list[us] = true
 		}
 		p.cv_cnt = len(p.wait_list)
+
+		ctx := context.Background()
+		state := graph.GameStateInProgress
+		p.cv.L.Unlock()
+		if len(p.isWin()) != 0 {
+			state = graph.GameStateEnd
+		}
+		p.cv.L.Lock()
+		statuses := make([]graph.PlayerStatus, 0)
+		for user, alive := range p.players_alive {
+			statuses = append(statuses, graph.PlayerStatus{Username: user, Alive: alive})
+		}
+		resp, err := graph.UpdateGame(ctx, *p.client_graphql, p.curr_game_id, state, statuses)
+		if err != nil || !resp.UpdateGame {
+			fmt.Printf("Graphql error %v or ok %v \n", err, resp.UpdateGame)
+		}
 	}
 	return nil
 }

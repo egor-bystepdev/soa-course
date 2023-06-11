@@ -1,0 +1,55 @@
+type Player {
+  username: String!
+  role: String!
+  alive: Boolean!
+}
+
+type Comment {
+  source: String!
+  text: String!
+  date: String!
+}
+
+enum GameState {
+  IN_PROGRESS
+  END
+}
+
+type Game {
+  id: ID!
+  state: GameState!
+  date: String!
+  players: [Player!]!
+  comments: [Comment!]!
+}
+
+input GameInfo {
+  id: ID!
+  state: GameState!
+}
+
+input PlayerStatus {
+  username: String!
+  alive: Boolean!
+}
+
+input PlayerData {
+  username: String!
+  role: String!
+}
+
+input CommentData {
+  source: String!
+  text: String!
+}
+
+type Mutation {
+  CreateGame(game_info: GameInfo!, players: [PlayerData!]!): Boolean!
+  UpdateGame(game_id: ID!, new_state: GameState!, player_statuses: [PlayerStatus!]!): Boolean!
+  AddComment(game_id: ID!, data: CommentData!): Boolean!
+}
+
+type Query {
+  GetGamesInfo(ids: [ID!]!): [Game!]!
+  ListGames(max_count: Int!, state: GameState!): [ID!]!
+}

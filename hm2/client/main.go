@@ -1,49 +1,49 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"flag"
 	"math/rand"
+	"os"
 	"time"
-	"bufio"
-	"encoding/json"
 
 	"google.golang.org/grpc"
 
 	game_client "hm2/game"
-	"hm2/pkg/welcome_proto"
+	welcome "hm2/pkg/welcome_proto"
 )
 
 func RandomString(length int) string {
-    letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-    rand.Seed(time.Now().UnixNano())
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	rand.Seed(time.Now().UnixNano())
 
-    result := make([]rune, length)
-    for i := range result {
-        result[i] = letters[rand.Intn(len(letters))]
-    }
+	result := make([]rune, length)
+	for i := range result {
+		result[i] = letters[rand.Intn(len(letters))]
+	}
 
-    return string(result)
+	return string(result)
 }
 
 func ParseWaitList(json_value string) ([]string, error) {
 	var users []string
-    err := json.Unmarshal([]byte(json_value), &users)
+	err := json.Unmarshal([]byte(json_value), &users)
 	return users, err
 }
 
 type Session struct {
-    Port  int `json:"port"`
-    Id   int   `json:"id"`
+	Port int `json:"port"`
+	Id   int `json:"id"`
 }
 
 func ParseNewSession(json_value string) (int, int, error) {
 	var session Session
-    err := json.Unmarshal([]byte(json_value), &session)
+	err := json.Unmarshal([]byte(json_value), &session)
 	return session.Id, session.Port, err
 }
 
@@ -116,6 +116,7 @@ func connectAndPlay(host_port_from_stdin, manual_game bool) error {
 			}
 			fmt.Printf("Port `%v`, session_id `%v`\n", port, id)
 			stream.CloseSend()
+			time.Sleep(time.Second)
 			err = game_client.Start(id, envHost, port, username, manual_game, rabbitmq_url)
 			if err != nil {
 				return err
