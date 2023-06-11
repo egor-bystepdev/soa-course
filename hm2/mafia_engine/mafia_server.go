@@ -7,6 +7,8 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+
+	"github.com/Khan/genqlient/graphql"
 )
 
 type server struct {
@@ -223,7 +225,7 @@ func (s *server) Join(stream game.Game_JoinServer) error {
 	return err
 }
 
-func StartGameServer(session_id, port int, users []string) {
+func StartGameServer(session_id, port int, users []string, client *graphql.Client) {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	log.Printf("Start server with session %v, port %v", session_id, port)
 	if err != nil {
@@ -231,7 +233,7 @@ func StartGameServer(session_id, port int, users []string) {
 		return
 	}
 	s := grpc.NewServer()
-	game.RegisterGameServer(s, &server{session_id: session_id, state: *newPlayersState(users)})
+	game.RegisterGameServer(s, &server{session_id: session_id, state: *newPlayersState(users, client)})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

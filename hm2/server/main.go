@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -15,6 +16,8 @@ import (
 	welcome "hm2/pkg/welcome_proto"
 
 	"google.golang.org/grpc"
+
+	"github.com/Khan/genqlient/graphql"
 )
 
 func isAlphanumeric(s string) bool {
@@ -36,6 +39,7 @@ type server struct {
 	current_session_id int
 	session_ports      int
 	mutex              sync.Mutex
+	graph_client       *graphql.Client
 }
 
 func deleteUser(s *server, username string) {
@@ -172,7 +176,7 @@ func (s *server) Connect(req *welcome.ConnectRequest, stream welcome.Welcome_Con
 			log.Printf("Start session1111")
 			if canStartSession(s, id) {
 				log.Printf("Start session")
-				go game.StartGameServer(id, port, getUsersBySession(s, id))
+				go game.StartGameServer(id, port, getUsersBySession(s, id), s.graph_client)
 			}
 			time.Sleep(time.Second)
 			stream.Send(&welcome.WelcomeResponse{MessageType: welcome.MessageType_SessionConnectAddr, ResultString: json_data})
@@ -189,6 +193,8 @@ func (s *server) Connect(req *welcome.ConnectRequest, stream welcome.Welcome_Con
 func main() {
 	envPort := os.Getenv("MAFIA_SERVER_PORT")
 	envGamePlayers := os.Getenv("MAFIA_PLAYERS_COUNT")
+	graphqlHost := os.Getenv("GRAPHQL_HOST")
+	graphqlPort := os.Getenv("GRAPHQL_PORT")
 	if len(envGamePlayers) != 0 {
 		game_players, err := strconv.Atoi(envGamePlayers)
 		if err == nil && game_players >= 3 {
@@ -201,6 +207,12 @@ func main() {
 	if len(envPort) == 0 {
 		envPort = "50051"
 	}
+	if len(graphqlHost) == 0 {
+		graphqlHost = "localhost"
+	}
+	if (len(graphqlPort) == 0) {
+		graphqlPort = "8080"
+	}
 
 	fmt.Printf("Start server with %v players, port %v\n", kGameUsersLimit, envPort)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", envPort))
@@ -209,12 +221,15 @@ func main() {
 		return
 	}
 	s := grpc.NewServer()
+	client := graphql.NewClient(fmt.Sprintf("http://%v:%v/graphql", graphqlHost, graphqlPort), http.DefaultClient)
 	welcome.RegisterWelcomeServer(s, &server{users: make(map[string]int),
-			sessions: make(map[string]int),
-			session_to_port: make(map[int]int),
-			started_sessions: make(map[int]bool), 
-			session_ports: 5000,
-			current_session_id: 0})
+		sessions:           make(map[string]int),
+		session_to_port:    make(map[int]int),
+		started_sessions:   make(map[int]bool),
+		session_ports:      5000,
+		current_session_id: 0,
+		graph_client:       &client,
+	})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

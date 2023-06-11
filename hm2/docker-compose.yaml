@@ -8,8 +8,10 @@ services:
       - "50051"
     environment:
       MAFIA_SERVER_PORT: 50051
-      MAFIA_PLAYERS_COUNT: 20
+      MAFIA_PLAYERS_COUNT: 4
       RABBITMQ_HOST: "rabbitmq"
+      GRAPHQL_HOST: "sessions_stat"
+      GRAPHQL_PORT: 8080
   
   client:
     image: dofe71/mafia_client
@@ -21,6 +23,13 @@ services:
       RABBITMQ_HOST: "rabbitmq"
     depends_on:
       - server
+
+  sessions_stat:
+    image: dofe71/soa_graphql
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
 
   rabbitmq:
     image: rabbitmq:3-management

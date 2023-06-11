@@ -1,0 +1,7 @@
+mutation CreateGame($game_info: GameInfo!, $players: [PlayerData!]!) {
+  CreateGame(game_info: $game_info, players: $players)
+}
+
+mutation UpdateGame($game_id: ID!, $new_state: GameState!, $player_statuses: [PlayerStatus!]!) {
+  UpdateGame(game_id: $game_id, new_state: $new_state, player_statuses: $player_statuses)
+}
