@@ -10,6 +10,11 @@ docker build -t dofe71/mafia_server -f server/Dockerfile .
 docker build -t dofe71/soa_graphql -f sessions_stat_service/Dockerfile .
 ```
 
+либо
+```
+bash build-images.sh
+```
+
 ### Запуск докера
 
 ```
@@ -56,6 +61,8 @@ docker run --rm -it -p 15672:15672 -p 5672:5672 rabbitmq:3-management
 ```
 
 Graphql 
+
+Документация в файле GRAPHQL_DOC.md
 
 ```
 go run sessions_stat_service/server.go
